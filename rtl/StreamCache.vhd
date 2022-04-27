@@ -28,8 +28,8 @@ library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
 use axi_pcie_core.MigPkg.all;
 
-library work;
-use work.AppMigPkg.all;
+library daq_stream_cache;
+use daq_stream_cache.AppMigPkg.all;
 
 entity StreamCache is
    generic (
@@ -63,8 +63,6 @@ entity StreamCache is
       dmaObMasters          : in  AxiStreamMasterArray    (NUM_LANES_G downto 0);
       dmaObSlaves           : out AxiStreamSlaveArray     (NUM_LANES_G downto 0);
       -- DDR Ports
-      clk200                : in    sl;
-      rst200                : in    sl;
       ddrClkP               : in    slv          (1 downto 0);
       ddrClkN               : in    slv          (1 downto 0);
       ddrOut                : out   DdrOutArray  (1 downto 0);
@@ -98,12 +96,31 @@ architecture mapping of StreamCache is
    signal migStatus        : MigStatusArray(NUM_LANES_G-1 downto 0);
 
    signal userReset        : sl;
-   signal arst200, irst200, urst200 : sl;
+   signal clk200, rst200, arst200, irst200, urst200 : sl;
 
    constant AXIO_STREAM_CONFIG_C : AxiStreamConfigType := ssiAxiStreamConfig(16, TKEEP_COMP_C, TUSER_FIRST_LAST_C, 8, 2);  -- 128-bit interface
      
 begin
 
+   U_axilClk : entity surf.ClockManagerUltraScale
+      generic map(
+         TPD_G             => TPD_G,
+         SIMULATION_G      => ROGUE_SIM_EN_G,
+         TYPE_G            => "MMCM",
+         INPUT_BUFG_G      => true,
+         FB_BUFG_G         => false,
+         RST_IN_POLARITY_G => '1',
+         NUM_CLOCKS_G      => 3,
+         -- MMCM attributes
+         CLKIN_PERIOD_G     => 6.4,      -- 156.25 MHz
+         CLKFBOUT_MULT_G    => 8,        -- 1.25GHz = 8 x 156.25 MHz
+         CLKOUT0_DIVIDE_F_G => 6.25)     -- 200 MHz
+      port map (
+         clkIn     => axilClk,
+         rstIn     => axilRst,
+         clkOut(0) => clk200,
+         rstOut(0) => rst200 );
+  
     -- Forcing BUFG for reset that's used everywhere      
     U_BUFG : BUFG
       port map (
@@ -128,7 +145,7 @@ begin
 
       eventTrigMsgCtrl(i).pause <= appIbAlmostFull(i);
       
-      U_HwDma : entity work.AppToMigDma
+      U_HwDma : entity daq_stream_cache.AppToMigDma
         generic map ( AXI_BASE_ADDR_G     => (toSlv(i,2) & toSlv(0,30)),
                       SLAVE_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_C,
                       MIG_AXIS_CONFIG_G   => AXIO_STREAM_CONFIG_C )
@@ -165,7 +182,7 @@ begin
       
    end generate GEN_VEC;
 
-  U_Mig2Pcie : entity work.MigToPcieDma
+  U_Mig2Pcie : entity daq_stream_cache.MigToPcieDma
        generic map ( LANES_G           => NUM_LANES_G,
                      MONCLKS_G         => 4,
                      AXIS_CONFIG_G     => AXIO_STREAM_CONFIG_C,
@@ -233,7 +250,7 @@ begin
       end loop;
     end process gen_mem;
      
-   U_MIG0 : entity work.MigA
+   U_MIG0 : entity daq_stream_cache.MigA
      generic map (
        MASTERS_G    => 4 )
     port map ( axiReady        => memReady(0),
@@ -250,7 +267,7 @@ begin
                ddrOut          => ddrOut  (0),
                ddrInOut        => ddrInOut(0) );
 
-  U_MIG1 : entity work.MigB
+  U_MIG1 : entity daq_stream_cache.MigB
      generic map (
        MASTERS_G    => 4 )
     port map ( axiReady        => memReady(1),

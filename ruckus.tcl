@@ -12,7 +12,7 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
 }
 
 # Load Source Code
-loadSource -dir "$::DIR_PATH/rtl"
+loadSource -lib daq_stream_cache -dir "$::DIR_PATH/rtl"
 
 # Load xci files
 loadIpCore -path "$::DIR_PATH/coregen/XilinxKcu1500Mig0Core.xci"

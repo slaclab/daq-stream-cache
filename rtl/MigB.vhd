@@ -2,7 +2,7 @@
 -- File       : MigB.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-08-03
--- Last update: 2019-11-20
+-- Last update: 2022-04-27
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core
 -------------------------------------------------------------------------------
@@ -27,6 +27,8 @@ use surf.AxiPkg.all;
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
 use axi_pcie_core.MigPkg.all;
+
+library daq_stream_cache;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -235,7 +237,7 @@ begin
          rstIn  => coreResetN,
          rstOut => coreAresetN );
 
-   U_Xbar : entity work.MigXbarV3Wrapper
+   U_Xbar : entity daq_stream_cache.MigXbarV3Wrapper
       generic map (
          TPD_G => TPD_G)
       port map (

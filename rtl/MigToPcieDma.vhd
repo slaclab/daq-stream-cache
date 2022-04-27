@@ -2,7 +2,7 @@
 -- File       : MigToPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2022-03-18
+-- Last update: 2022-04-27
 -------------------------------------------------------------------------------
 -- Description: Receives transfer requests representing data buffers pending
 -- in local DRAM and moves data to CPU host memory over PCIe AXI interface.
@@ -30,7 +30,9 @@ use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiDmaPkg.all;
-use work.AppMigPkg.all;
+
+library daq_stream_cache;
+use daq_stream_cache.AppMigPkg.all;
 
 entity MigToPcieDma is
    generic (  LANES_G           : integer          := 4;
@@ -215,7 +217,7 @@ begin
 
     GEN_MON_INLET : if i=0 generate
       monRst <= not r.monEnable or axiRst;
-      U_MonMigStatus : entity work.AxisHistogram
+      U_MonMigStatus : entity daq_stream_cache.AxisHistogram
         generic map ( ADDR_WIDTH_G => MON_MIG_STATUS_AWIDTH_C,
                       INLET_G      => true )
         port map ( clk  => axiClk,
@@ -229,7 +231,7 @@ begin
                    mAxisSlave  => monMigStatusSlave (i) );
     end generate;
     GEN_MON_SOCKET : if i>0 generate
-      U_MonMigStatus : entity work.AxisHistogram
+      U_MonMigStatus : entity daq_stream_cache.AxisHistogram
         generic map ( ADDR_WIDTH_G => MON_MIG_STATUS_AWIDTH_C )
         port map ( clk  => axiClk,
                    rst  => monRst,
