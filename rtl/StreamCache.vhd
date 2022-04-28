@@ -51,10 +51,10 @@ entity StreamCache is
       -- PGP Streams (axilClk domain)
       appClk                : in  slv                     (NUM_LANES_G-1 downto 0);
       appRst                : in  slv                     (NUM_LANES_G-1 downto 0);
-      appIbMasters          : out AxiStreamMasterArray    (NUM_LANES_G-1 downto 0);
-      appIbSlaves           : in  AxiStreamSlaveArray     (NUM_LANES_G-1 downto 0);
-      appObMasters          : in  AxiStreamQuadMasterArray(NUM_LANES_G-1 downto 0);
-      appObSlaves           : out AxiStreamQuadSlaveArray (NUM_LANES_G-1 downto 0);
+      appIbMasters          : in  AxiStreamMasterArray    (NUM_LANES_G-1 downto 0);
+      appIbSlaves           : out AxiStreamSlaveArray     (NUM_LANES_G-1 downto 0);
+      appObMasters          : out AxiStreamMasterArray    (NUM_LANES_G-1 downto 0);
+      appObSlaves           : in  AxiStreamSlaveArray     (NUM_LANES_G-1 downto 0);
       -- DMA Interface (dmaClk domain)
       dmaClk                : in  sl;
       dmaRst                : in  sl;
@@ -105,7 +105,7 @@ begin
    U_axilClk : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G             => TPD_G,
-         SIMULATION_G      => ROGUE_SIM_EN_G,
+         SIMULATION_G      => false,
          TYPE_G            => "MMCM",
          INPUT_BUFG_G      => true,
          FB_BUFG_G         => false,
@@ -140,14 +140,11 @@ begin
    GEN_VEC :
    for i in NUM_LANES_G-1 downto 0 generate
 
-      appClk      (i) <= axilClk;
-      appRst      (i) <= axilRst;
-
       eventTrigMsgCtrl(i).pause <= appIbAlmostFull(i);
       
       U_HwDma : entity daq_stream_cache.AppToMigDma
         generic map ( AXI_BASE_ADDR_G     => (toSlv(i,2) & toSlv(0,30)),
-                      SLAVE_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_C,
+                      SLAVE_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_G,
                       MIG_AXIS_CONFIG_G   => AXIO_STREAM_CONFIG_C )
         port map ( sAxisClk        => appClk         (i),
                    sAxisRst        => appRst         (i),
