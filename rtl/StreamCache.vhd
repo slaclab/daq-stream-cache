@@ -22,6 +22,7 @@ use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiDmaPkg.all;
+use surf.Pgp4Pkg.all;
 use surf.SsiPkg.all;
 
 library axi_pcie_core;
