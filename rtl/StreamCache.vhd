@@ -22,7 +22,6 @@ use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiDmaPkg.all;
-use surf.Pgp4Pkg.all;
 use surf.SsiPkg.all;
 
 library axi_pcie_core;
@@ -111,7 +110,7 @@ begin
          INPUT_BUFG_G      => true,
          FB_BUFG_G         => false,
          RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 3,
+         NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G     => 6.4,      -- 156.25 MHz
          CLKFBOUT_MULT_G    => 8,        -- 1.25GHz = 8 x 156.25 MHz
@@ -145,7 +144,7 @@ begin
       
       U_HwDma : entity daq_stream_cache.AppToMigDma
         generic map ( AXI_BASE_ADDR_G     => (toSlv(i,2) & toSlv(0,30)),
-                      SLAVE_AXIS_CONFIG_G => PGP4_AXIS_CONFIG_G,
+                      SLAVE_AXIS_CONFIG_G => APP_AXIS_CONFIG_G,
                       MIG_AXIS_CONFIG_G   => AXIO_STREAM_CONFIG_C )
         port map ( sAxisClk        => appClk         (i),
                    sAxisRst        => appRst         (i),
